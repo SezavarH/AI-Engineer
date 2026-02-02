@@ -40,3 +40,19 @@
     If having any error:
     * Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted -Force
     then activate again
+
+### Install requirments
+
+    pip install -r requirementx.txt
+
+### Huggingface step
+
+    use AutoTokenizer, AutoModelForCausalLM and connect them using pipeline
+
+### Langchain
+    
+    use HuggigngFacePipeline to wrap the pipeline with Langchain
+
+### Call the Model
+
+    use invoke 
