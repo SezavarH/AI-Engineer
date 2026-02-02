@@ -1,0 +1,10 @@
+# Core ML
+torch>=2.1.0
+transformers>=4.39.0
+accelerate>=0.27.0
+bitsandbytes>=0.42.0
+sentencepiece>=0.1.99
+
+# LangChain (modular)
+langchain>=0.1.14
+langchain-community>=0.0.34
