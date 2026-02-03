@@ -43,7 +43,9 @@
 
 ### Install requirments
 
-    pip install -r requirementx.txt
+    pip install -r requirementx.txt (CPU usage)
+    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 (Cuda)
+
 
 ### Huggingface step
 
@@ -56,3 +58,13 @@
 ### Call the Model
 
     use invoke 
+
+### Speed up
+
+    pip install vllm
+
+    python -m vllm.entrypoints.openai.api_server \
+    --model Qwen/Qwen2.5-3B-Instruct \
+    --dtype float16 \
+    --max-model-len 4096 \
+    --port 8000

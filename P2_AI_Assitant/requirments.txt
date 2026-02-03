@@ -1,5 +1,15 @@
-# Core ML
-torch>=2.1.0
+# Core ML with CUDA 11.8 support
+torch==2.1.0+cu118
+torchvision==0.16.0+cu118
+torchaudio==2.1.0+cu118
+--index-url https://download.pytorch.org/whl/cu118
+
+# Alternative format (exact wheel URLs)
+# torch @ https://download.pytorch.org/whl/cu118/torch-2.1.0%2Bcu118-cp310-cp310-linux_x86_64.whl
+# torchvision @ https://download.pytorch.org/whl/cu118/torchvision-0.16.0%2Bcu118-cp310-cp310-linux_x86_64.whl
+# torchaudio @ https://download.pytorch.org/whl/cu118/torchaudio-2.1.0%2Bcu118-cp310-cp310-linux_x86_64.whl
+
+# Rest of your requirements
 transformers>=4.39.0
 accelerate>=0.27.0
 bitsandbytes>=0.42.0
