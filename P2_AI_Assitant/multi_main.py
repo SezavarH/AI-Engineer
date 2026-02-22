@@ -54,14 +54,25 @@ def load_selected_model(name):
     current_name = repo_id
     return f"Active Model: {name}"
 
+def check_system_role_support(model_id):
+    """Check if the model supports system role in chat template"""
+    models_without_system = ["google/gemma-2-9b-it"]
+    return model_id not in models_without_system
+
 def predict(message, history, model_choice):
+    global current_model, current_tokenizer, current_name
+    
     if current_name != MODELS[model_choice]:
         load_selected_model(model_choice)
 
-    # 1. System prompt to force Persian accuracy
-    messages = [{"role": "system", "content": "You are a helpful assistant. You speak and write fluent, accurate Persian (Farsi)."}]
+    # Build messages based on model's system role support
+    messages = []
     
-    # 2. Rebuild history (Handles multiple Gradio versions)
+    # Add system prompt if model supports it
+    if check_system_role_support(current_name):
+        messages.append({"role": "system", "content": "You are a helpful assistant. You speak and write fluent, accurate Persian (Farsi)."})
+    
+    # Rebuild history (Handles multiple Gradio versions)
     for turn in history:
         if isinstance(turn, dict):
             messages.append(turn)
@@ -71,16 +82,40 @@ def predict(message, history, model_choice):
 
     messages.append({"role": "user", "content": str(message)})
 
-    # 3. Apply Template
-    inputs = current_tokenizer.apply_chat_template(
-        messages,
-        add_generation_prompt=True,
-        tokenize=True,
-        return_tensors="pt",
-        return_dict=True
-    ).to(current_model.device)
+    # For models without system role support, prepend system instruction to first user message
+    if not check_system_role_support(current_name):
+        system_msg = "You are a helpful assistant. You speak and write fluent, accurate Persian (Farsi). "
+        if messages and messages[0]["role"] == "user":
+            messages[0]["content"] = system_msg + messages[0]["content"]
+        else:
+            # If no user message exists (shouldn't happen), create one
+            messages.insert(0, {"role": "user", "content": system_msg})
 
-    # 4. Streamer
+    try:
+        # Apply Template with error handling
+        inputs = current_tokenizer.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            tokenize=True,
+            return_tensors="pt",
+            return_dict=True
+        ).to(current_model.device)
+    except Exception as e:
+        # Fallback: manually format if template fails
+        print(f"Template error: {e}, using fallback formatting")
+        prompt = ""
+        for msg in messages:
+            if msg["role"] == "system":
+                prompt += f"System: {msg['content']}\n"
+            elif msg["role"] == "user":
+                prompt += f"User: {msg['content']}\n"
+            elif msg["role"] == "assistant":
+                prompt += f"Assistant: {msg['content']}\n"
+        prompt += "Assistant: "
+        
+        inputs = current_tokenizer(prompt, return_tensors="pt").to(current_model.device)
+
+    # Streamer
     streamer = TextIteratorStreamer(current_tokenizer, skip_prompt=True, skip_special_tokens=True)
 
     generate_kwargs = dict(
@@ -92,7 +127,7 @@ def predict(message, history, model_choice):
         pad_token_id=current_tokenizer.eos_token_id
     )
 
-    # 5. Threaded Generation
+    # Threaded Generation
     thread = Thread(target=current_model.generate, kwargs=generate_kwargs)
     thread.start()
 
